@@ -1,73 +1,74 @@
 <?php
 /**
- * @var \ProductModel[] $products
+ * @var stdClass[] $products Danh sách sản phẩm (inject từ ProductController::index)
  */
 ?>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Danh sách sản phẩm</title>
-    <!-- Thêm Bootstrap 5 từ CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="/THMNM_NangCao/public/css/style.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container-fluid px-5 mt-5">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1>Danh sách sản phẩm</h1>
-        <a href="/THMNM_NangCao/Product/add" class="btn btn-success">Thêm sản phẩm mới</a>
-    </div>
+<?php include 'app/views/shares/header.php'; ?>
 
-    <div class="card shadow-sm">
-        <div class="card-body p-0">
-            <table class="table table-hover table-striped mb-0">
-                <thead class="table-dark">
-                    <tr>
-                        <th width="5%">ID</th>
-                        <th width="15%">Hình ảnh</th>
-                        <th width="20%">Tên sản phẩm</th>
-                        <th width="30%">Mô tả</th>
-                        <th width="15%">Giá</th>
-                        <th width="15%" class="text-center">Hành động</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <?php if (empty($products)): ?>
-                        <tr>
-                            <td colspan="6" class="text-center py-4">Chưa có sản phẩm nào.</td>
-                        </tr>
-                    <?php else: ?>
-                        <?php foreach ($products as $product): ?>
-                        <tr>
-                            <td><?php echo $product->getID(); ?></td>
-                            <td>
-                                <?php if ($product->getImage()): ?>
-                                    <img src="/THMNM_NangCao/public/images/<?php echo htmlspecialchars($product->getImage(), ENT_QUOTES, 'UTF-8'); ?>" alt="Ảnh" width="80" class="img-thumbnail">
-                                <?php else: ?>
-                                    <span class="text-muted">Chưa có ảnh</span>
-                                <?php endif; ?>
-                            </td>
-                            <td class="fw-bold"><?php echo htmlspecialchars($product->getName(), ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td><?php echo htmlspecialchars($product->getDescription(), ENT_QUOTES, 'UTF-8'); ?></td>
-                            <td class="text-danger fw-bold"><?php echo number_format($product->getPrice(), 0, ',', '.'); ?> đ</td>
-                            <td class="text-center">
-                                <a href="/THMNM_NangCao/Product/edit/<?php echo $product->getID();?>" class="btn btn-sm btn-primary">Sửa</a>
-                                <a href="/THMNM_NangCao/Product/delete/<?php echo $product->getID(); ?>" class="btn btn-sm btn-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">Xóa</a>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    <?php endif; ?>
-                </tbody>
-            </table>
-        </div>
-    </div>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3"><i class="fas fa-box mr-2"></i>Danh sách sản phẩm</h1>
+    <a href="/THMNM_NangCao/Product/add" class="btn btn-success">
+        <i class="fas fa-plus-circle mr-1"></i>Thêm sản phẩm mới
+    </a>
 </div>
-<!-- Thêm Bootstrap Javascript (Tuỳ chọn) -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<!-- Custom JS -->
-<script src="/THMNM_NangCao/public/js/main.js"></script>
-</body>
-</html>
+
+<?php if (empty($products)): ?>
+    <div class="alert alert-info">Chưa có sản phẩm nào. <a href="/THMNM_NangCao/Product/add">Thêm ngay!</a></div>
+<?php else: ?>
+<div class="table-responsive">
+    <table class="table table-bordered table-hover table-striped">
+        <thead class="thead-dark">
+            <tr>
+                <th>#</th>
+                <th>Hình ảnh</th>
+                <th>Tên sản phẩm</th>
+                <th>Mô tả</th>
+                <th>Giá (VNĐ)</th>
+                <th>Danh mục</th>
+                <th>Hành động</th>
+            </tr>
+        </thead>
+        <tbody>
+            <?php foreach ($products as $product): ?>
+            <tr>
+                <td><?php echo $product->id; ?></td>
+                <td>
+                    <?php if (!empty($product->image)): ?>
+                        <img src="/THMNM_NangCao/<?php echo htmlspecialchars($product->image, ENT_QUOTES, 'UTF-8'); ?>"
+                             alt="<?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>"
+                             style="width:80px; height:60px; object-fit:cover; border-radius:4px;">
+                    <?php else: ?>
+                        <span class="text-muted small"><i class="fas fa-image"></i> Chưa có ảnh</span>
+                    <?php endif; ?>
+                </td>
+                <td>
+                    <a href="/THMNM_NangCao/Product/show/<?php echo $product->id; ?>" class="font-weight-bold">
+                        <?php echo htmlspecialchars($product->name, ENT_QUOTES, 'UTF-8'); ?>
+                    </a>
+                </td>
+                <td><?php echo htmlspecialchars($product->description, ENT_QUOTES, 'UTF-8'); ?></td>
+                <td class="text-right font-weight-bold text-danger">
+                    <?php echo number_format($product->price, 0, ',', '.'); ?> ₫
+                </td>
+                <td>
+                    <span class="badge badge-primary">
+                        <?php echo htmlspecialchars($product->category_name ?? 'Chưa phân loại', ENT_QUOTES, 'UTF-8'); ?>
+                    </span>
+                </td>
+                <td nowrap>
+                    <a href="/THMNM_NangCao/Product/edit/<?php echo $product->id; ?>" class="btn btn-sm btn-warning mr-1">
+                        <i class="fas fa-edit"></i> Sửa
+                    </a>
+                    <a href="/THMNM_NangCao/Product/delete/<?php echo $product->id; ?>" class="btn btn-sm btn-danger"
+                       onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');">
+                        <i class="fas fa-trash"></i> Xóa
+                    </a>
+                </td>
+            </tr>
+            <?php endforeach; ?>
+        </tbody>
+    </table>
+</div>
+<?php endif; ?>
+
+<?php include 'app/views/shares/footer.php'; ?>

@@ -1,66 +1,91 @@
 <?php
 class ProductModel
 {
-// Thuộc tính của lớp ProductModel
-private $ID;
-private $Name;
-private $Description;
-private $Price;
-private $Image; // Thêm thuộc tính ảnh
+    private $conn;
+    private $table_name = "product";
 
-// Constructor để khởi tạo đối tượng ProductModel
-public function __construct($ID, $Name, $Description, $Price, $Image = '')
-{
-$this->ID = $ID;
-$this->Name = $Name;
-$this->Description = $Description;
-$this->Price = $Price;
-$this->Image = $Image;
-}
-// Getter và Setter cho thuộc tính Image
-public function getImage()
-{
-return $this->Image;
-}
-public function setImage($Image)
-{
-$this->Image = $Image;
-}
-// Getter và Setter cho thuộc tính ID
-public function getID()
-{
-return $this->ID;
-}
-public function setID($ID)
-{
-$this->ID = $ID;
-}
-// Getter và Setter cho thuộc tính Name
-public function getName()
-{
-return $this->Name;
-}
-public function setName($Name)
-{
-$this->Name = $Name;
-}
-// Getter và Setter cho thuộc tính Description
-public function getDescription()
-{
-return $this->Description;
-}
-public function setDescription($Description)
-{
-$this->Description = $Description;
-}
-// Getter và Setter cho thuộc tính Price
-public function getPrice()
-{
-return $this->Price;
-}
-public function setPrice($Price)
-{
-$this->Price = $Price;
-}
+    public function __construct($db)
+    {
+        $this->conn = $db;
+    }
+
+    public function getProducts()
+    {
+        $query = "SELECT p.id, p.name, p.description, p.price, p.image, c.name as category_name
+                  FROM " . $this->table_name . " p
+                  LEFT JOIN category c ON p.category_id = c.id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
+
+    public function getProductById($id)
+    {
+        $query = "SELECT * FROM " . $this->table_name . " WHERE id = :id";
+        $stmt = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        $stmt->execute();
+        return $stmt->fetch(PDO::FETCH_OBJ);
+    }
+
+    public function addProduct($name, $description, $price, $category_id, $image = "")
+    {
+        $errors = [];
+        if (empty($name))        $errors['name']        = 'Tên sản phẩm không được để trống';
+        if (empty($description)) $errors['description'] = 'Mô tả không được để trống';
+        if (!is_numeric($price) || $price < 0) $errors['price'] = 'Giá sản phẩm không hợp lệ';
+        if (count($errors) > 0) return $errors;
+
+        $query = "INSERT INTO " . $this->table_name . "
+                  (name, description, price, category_id, image)
+                  VALUES (:name, :description, :price, :category_id, :image)";
+        $stmt = $this->conn->prepare($query);
+
+        $name        = htmlspecialchars(strip_tags($name));
+        $description = htmlspecialchars(strip_tags($description));
+        $price       = htmlspecialchars(strip_tags($price));
+        $category_id = htmlspecialchars(strip_tags($category_id));
+        $image       = htmlspecialchars(strip_tags($image));
+
+        $stmt->bindParam(':name',        $name);
+        $stmt->bindParam(':description', $description);
+        $stmt->bindParam(':price',       $price);
+        $stmt->bindParam(':category_id', $category_id);
+        $stmt->bindParam(':image',       $image);
+
+        return $stmt->execute() ? true : false;
+    }
+
+    public function updateProduct($id, $name, $description, $price, $category_id, $image = "")
+    {
+        $query = "UPDATE " . $this->table_name . "
+                  SET name=:name, description=:description, price=:price,
+                      category_id=:category_id, image=:image
+                  WHERE id=:id";
+        $stmt = $this->conn->prepare($query);
+
+        $name        = htmlspecialchars(strip_tags($name));
+        $description = htmlspecialchars(strip_tags($description));
+        $price       = htmlspecialchars(strip_tags($price));
+        $category_id = htmlspecialchars(strip_tags($category_id));
+        $image       = htmlspecialchars(strip_tags($image));
+
+        $stmt->bindParam(':id',          $id);
+        $stmt->bindParam(':name',        $name);
+        $stmt->bindParam(':description', $description);
+        $stmt->bindParam(':price',       $price);
+        $stmt->bindParam(':category_id', $category_id);
+        $stmt->bindParam(':image',       $image);
+
+        return $stmt->execute() ? true : false;
+    }
+
+    public function deleteProduct($id)
+    {
+        $query = "DELETE FROM " . $this->table_name . " WHERE id=:id";
+        $stmt  = $this->conn->prepare($query);
+        $stmt->bindParam(':id', $id);
+        return $stmt->execute() ? true : false;
+    }
 }
 ?>

@@ -1,66 +1,74 @@
 <?php
 /**
- * @var array $errors
+ * @var stdClass[] $categories Danh sách danh mục (inject từ ProductController::add)
+ * @var string[]   $errors     Lỗi validate (inject từ ProductController::save nếu có)
  */
 ?>
-<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thêm sản phẩm</title>
-    <!-- Bootstrap 5 CDN -->
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <!-- Custom CSS -->
-    <link href="/THMNM_NangCao/public/css/style.css" rel="stylesheet">
-</head>
-<body class="bg-light">
-<div class="container mt-5">
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="card shadow-sm">
-                <div class="card-header bg-primary text-white">
-                    <h4 class="mb-0">Thêm sản phẩm mới</h4>
-                </div>
-                <div class="card-body">
-                    <?php if (!empty($errors)): ?>
-                        <div class="alert alert-danger">
-                            <ul class="mb-0">
-                                <?php foreach ($errors as $error): ?>
-                                    <li><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></li>
-                                <?php endforeach; ?>
-                            </ul>
-                        </div>
-                    <?php endif; ?>
+<?php include 'app/views/shares/header.php'; ?>
 
-                    <form method="POST" action="/THMNM_NangCao/Product/add" onsubmit="return validateForm();" enctype="multipart/form-data">
-                        <div class="mb-3">
-                            <label for="name" class="form-label fw-bold">Tên sản phẩm:</label>
-                            <input type="text" class="form-control" id="name" name="name" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="description" class="form-label fw-bold">Mô tả:</label>
-                            <textarea class="form-control" id="description" name="description" rows="4" required></textarea>
-                        </div>
-                        <div class="mb-3">
-                            <label for="price" class="form-label fw-bold">Giá:</label>
-                            <input type="number" class="form-control" id="price" name="price" step="0.01" required>
-                        </div>
-                        <div class="mb-3">
-                            <label for="image" class="form-label fw-bold">Hình ảnh:</label>
-                            <input type="file" class="form-control" id="image" name="image" accept="image/*">
-                        </div>
-                        <hr>
-                        <button type="submit" class="btn btn-primary px-4">Thêm sản phẩm</button>
-                        <a href="/THMNM_NangCao/Product/list" class="btn btn-secondary ms-2">Quay lại danh sách</a>
-                    </form>
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h1 class="h3"><i class="fas fa-plus-circle mr-2"></i>Thêm sản phẩm mới</h1>
+    <a href="/THMNM_NangCao/Product" class="btn btn-secondary">
+        <i class="fas fa-arrow-left mr-1"></i>Quay lại danh sách
+    </a>
+</div>
+
+<?php if (!empty($errors)): ?>
+    <div class="alert alert-danger">
+        <ul class="mb-0">
+            <?php foreach ($errors as $error): ?>
+                <li><?php echo htmlspecialchars($error, ENT_QUOTES, 'UTF-8'); ?></li>
+            <?php endforeach; ?>
+        </ul>
+    </div>
+<?php endif; ?>
+
+<div class="card shadow-sm">
+    <div class="card-body">
+        <form method="POST" action="/THMNM_NangCao/Product/save" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="name"><i class="fas fa-tag mr-1"></i>Tên sản phẩm <span class="text-danger">*</span></label>
+                <input type="text" id="name" name="name" class="form-control"
+                       value="<?php echo htmlspecialchars($_POST['name'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                       placeholder="Nhập tên sản phẩm..." required>
+            </div>
+            <div class="form-group">
+                <label for="description"><i class="fas fa-align-left mr-1"></i>Mô tả <span class="text-danger">*</span></label>
+                <textarea id="description" name="description" class="form-control" rows="4"
+                          placeholder="Nhập mô tả sản phẩm..." required><?php echo htmlspecialchars($_POST['description'] ?? '', ENT_QUOTES, 'UTF-8'); ?></textarea>
+            </div>
+            <div class="form-row">
+                <div class="form-group col-md-6">
+                    <label for="price"><i class="fas fa-dollar-sign mr-1"></i>Giá (VNĐ) <span class="text-danger">*</span></label>
+                    <input type="number" id="price" name="price" class="form-control" step="1000" min="0"
+                           value="<?php echo htmlspecialchars($_POST['price'] ?? '', ENT_QUOTES, 'UTF-8'); ?>"
+                           placeholder="0" required>
+                </div>
+                <div class="form-group col-md-6">
+                    <label for="category_id"><i class="fas fa-tags mr-1"></i>Danh mục <span class="text-danger">*</span></label>
+                    <select id="category_id" name="category_id" class="form-control" required>
+                        <option value="">-- Chọn danh mục --</option>
+                        <?php foreach ($categories as $category): ?>
+                            <option value="<?php echo $category->id; ?>"
+                                <?php echo (isset($_POST['category_id']) && $_POST['category_id'] == $category->id) ? 'selected' : ''; ?>>
+                                <?php echo htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8'); ?>
+                            </option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
             </div>
-        </div>
+            <div class="form-group">
+                <label for="image"><i class="fas fa-image mr-1"></i>Hình ảnh</label>
+                <input type="file" id="image" name="image" class="form-control-file" accept="image/*">
+                <small class="text-muted">Định dạng: JPG, JPEG, PNG, GIF, WEBP. Tối đa 10MB.</small>
+            </div>
+            <hr>
+            <button type="submit" class="btn btn-primary">
+                <i class="fas fa-save mr-1"></i>Thêm sản phẩm
+            </button>
+            <a href="/THMNM_NangCao/Product" class="btn btn-secondary ml-2">Hủy</a>
+        </form>
     </div>
 </div>
-<!-- Bootstrap & Custom JS -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-<script src="/THMNM_NangCao/public/js/main.js"></script>
-</body>
-</html>
+
+<?php include 'app/views/shares/footer.php'; ?>
